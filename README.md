@@ -9,7 +9,7 @@ create, customize, and optimize academic curricula using AI.
 - Industry-aligned syllabus design
 
 ## Tech Stack
-- Frontend: React + Vite
+- Frontend: React + Vite + typeScript
 - Backend: Node.js
 - AI: LLM-based curriculum generation
 
