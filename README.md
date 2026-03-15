@@ -63,7 +63,7 @@ npm run dev
 
 5. Open the browser and visit
 
-http://localhost:5173/
+http://localhost:3000/
 
 ---
 
