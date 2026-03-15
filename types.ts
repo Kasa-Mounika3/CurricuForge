@@ -16,7 +16,10 @@ export type AppView =
   | 'student-practice'
   | 'student-interest-course'
   | 'timetable'
-  | 'blooms';
+  | 'blooms'
+  | 'student-announcements'
+  | 'student-reminders'
+  | 'student-tools';
 
 export interface UserInfo {
   name: string;

@@ -17,6 +17,9 @@ import ManagementDashboard from './components/dashboards/ManagementDashboard';
 import DepartmentDashboard from './components/dashboards/DepartmentDashboard';
 import FacultyDashboard from './components/dashboards/FacultyDashboard';
 import StudentDashboard from './components/dashboards/StudentDashboard';
+import StudentAnnouncements from './components/StudentAnnouncements';
+import StudentReminders from './components/StudentReminders';
+import StudentTools from './components/StudentTools';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
@@ -25,18 +28,28 @@ const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [previewItem, setPreviewItem] = useState<GeneratedContent | null>(null);
 
-  const addHistory = useCallback((item: Omit<GeneratedContent, 'id' | 'timestamp' | 'role' | 'collegeName' | 'userName' | 'approvalStatus' | 'department'>) => {
+  const addHistory = useCallback((item: Omit<GeneratedContent, 'id' | 'timestamp' | 'role' | 'collegeName' | 'userName' | 'approvalStatus' | 'department'> & { requestApproval?: boolean }) => {
     if (!currentUser) return;
     
-    // Auto-approve if management or department creates something
-    const initialStatus: ApprovalStatus = (currentUser.role === 'Management') 
-      ? 'Approved_Mgmt' 
-      : (currentUser.role === 'Department') 
-        ? 'Approved_Dept' 
-        : 'Pending';
+    const { requestApproval, ...contentData } = item;
+
+    // Logic for initial approval status
+    let initialStatus: ApprovalStatus = 'Pending';
+    
+    if (currentUser.role === 'Management') {
+      initialStatus = 'Approved_Mgmt';
+    } else if (currentUser.role === 'Department') {
+      initialStatus = 'Approved_Dept';
+    } else if (currentUser.role === 'Student') {
+      // If student DOES NOT request approval, it's auto-approved as "Private/Self-Verified"
+      // If they DO request it, it stays 'Pending' to show up in HOD queue
+      initialStatus = requestApproval ? 'Pending' : 'Approved_Mgmt';
+    } else if (currentUser.role === 'Faculty') {
+      initialStatus = 'Pending';
+    }
 
     const newItem: GeneratedContent = {
-      ...item,
+      ...contentData,
       id: Math.random().toString(36).substr(2, 9),
       timestamp: Date.now(),
       role: currentUser.role,
@@ -44,8 +57,9 @@ const App: React.FC = () => {
       collegeName: currentUser.collegeName,
       department: currentUser.department,
       approvalStatus: initialStatus,
-      isPublished: currentUser.role === 'Management' || currentUser.role === 'Department',
+      isPublished: currentUser.role === 'Management' || currentUser.role === 'Department' || (currentUser.role === 'Student' && !requestApproval),
     };
+
     setHistory(prev => [newItem, ...prev]);
     setPreviewItem(newItem);
   }, [currentUser]);
@@ -61,6 +75,10 @@ const App: React.FC = () => {
       { id: 'institutional', label: 'Governance Framework', icon: ICONS.Institution, roles: ['Management'] },
       { id: 'dept-details', label: 'Department Directory', icon: ICONS.Lesson, roles: ['Management'] }, 
       { id: 'college-ai', label: 'Overall College AI', icon: ICONS.Sparkles, roles: ['Management'] }, 
+      // Student Specific Sidebar items
+      { id: 'student-announcements', label: 'Institutional Notices', icon: ICONS.Institution, roles: ['Student'] },
+      { id: 'student-reminders', label: 'Academic Reminders', icon: ICONS.Timetable, roles: ['Student'] },
+      { id: 'student-tools', label: 'AI Study Lab', icon: ICONS.Sparkles, roles: ['Student'] },
     ];
     return baseItems.filter(item => item.roles.includes(currentUser.role));
   }, [currentUser]);
@@ -117,7 +135,7 @@ const App: React.FC = () => {
   const renderView = () => {
     if (currentView === 'dashboard') {
       switch (currentUser.role) {
-        case 'Management': return <ManagementDashboard history={history} onNavigate={setCurrentView} collegeName={currentUser.collegeName} onApprove={handleApproval} />;
+        case 'Management': return <ManagementDashboard history={history} onNavigate={setCurrentView} collegeName={currentUser.collegeName} onApprove={handleApproval} onGenerated={addHistory} />;
         case 'Department': return <DepartmentDashboard history={history} onNavigate={setCurrentView} collegeName={currentUser.collegeName} userDept={currentUser.department} onApprove={handleApproval} />;
         case 'Faculty': return <FacultyDashboard history={history} onNavigate={setCurrentView} collegeName={currentUser.collegeName} userDept={currentUser.department} userName={currentUser.name} />;
         case 'Student': return <StudentDashboard history={history} user={currentUser} onNavigate={setCurrentView} onGenerated={addHistory} />;
@@ -143,6 +161,9 @@ const App: React.FC = () => {
       case 'dept-details': return <DepartmentDetails {...commonProps} />;
       case 'college-ai': return <CollegeAI {...commonProps} />;
       case 'timetable': return <TimetableGenerator {...commonProps} />;
+      case 'student-announcements': return <StudentAnnouncements history={history} />;
+      case 'student-reminders': return <StudentReminders />;
+      case 'student-tools': return <StudentTools user={currentUser} onGenerated={addHistory} />;
       default: return null;
     }
   };
@@ -268,7 +289,7 @@ const App: React.FC = () => {
                   {previewItem.approvalStatus === 'Approved_Mgmt' ? (
                     <div className="flex items-center text-emerald-600 text-xs font-black uppercase tracking-widest">
                       <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
-                      Verified by Management
+                      Verified & Saved to Vault
                     </div>
                   ) : previewItem.approvalStatus === 'Approved_Dept' ? (
                     <div className="flex items-center text-indigo-600 text-xs font-black uppercase tracking-widest">

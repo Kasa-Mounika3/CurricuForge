@@ -1,17 +1,20 @@
-# CurricuForge
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-CurricuForge is a Generative AI–Powered Curriculum Design System that helps educators
-create, customize, and optimize academic curricula using AI.
+# Run and deploy your AI Studio app
 
-## Features
-- AI-based curriculum generation
-- Custom learning outcomes
-- Industry-aligned syllabus design
+This contains everything you need to run your app locally.
 
-## Tech Stack
-- Frontend: React + Vite + typeScript
-- Backend: Node.js
-- AI: LLM-based curriculum generation
+View your app in AI Studio: https://ai.studio/apps/drive/1QstjeNQ77jePPQq7gnuZjtWZ4pt7e3kA
 
-## Team Project
-This repository is developed as a group project for academic purposes.
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
